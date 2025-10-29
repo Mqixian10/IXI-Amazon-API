@@ -1,11 +1,13 @@
 // server.js
+
 import express from "express";
-import fetch from "node-fetch";
+// Eliminado: import fetch from "node-fetch";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 const app = express();
+
 const PORT = process.env.PORT || 10000;
 
 // 👇 Ruta raíz para evitar el error "Cannot GET /"
@@ -23,29 +25,28 @@ app.get("/api/creatinas", async (req, res) => {
 
     // 🔹 Esta es una llamada simulada de ejemplo (ya que la API de Amazon requiere firma)
     // Más abajo te explico cómo reemplazarla por datos reales
-
     const mockData = [
       {
         title: "Optimum Nutrition Creatine Monohydrate",
         image: "https://m.media-amazon.com/images/I/61p1fO7FhHL._AC_SL1500_.jpg",
         rating: 4.7,
         price: "€19.99",
-        link: "https://www.amazon.es/dp/B002DYIZEO?tag=ufc0d-21",
+        link: "https://www.amazon.es/dp/B002DYIZEO?tag=ufc0d-21"
       },
       {
         title: "MyProtein Creatina Monohidratada",
         image: "https://m.media-amazon.com/images/I/71Q8gkCwOUL._AC_SL1500_.jpg",
         rating: 4.6,
         price: "€17.49",
-        link: "https://www.amazon.es/dp/B00T9H2J1S?tag=ufc0d-21",
+        link: "https://www.amazon.es/dp/B00T9H2J1S?tag=ufc0d-21"
       },
       {
         title: "Creapure Creatina Pura 500g",
         image: "https://m.media-amazon.com/images/I/61bqD5HVbiL._AC_SL1500_.jpg",
         rating: 4.8,
         price: "€24.90",
-        link: "https://www.amazon.es/dp/B01LZ6RFS3?tag=ufc0d-21",
-      },
+        link: "https://www.amazon.es/dp/B01LZ6RFS3?tag=ufc0d-21"
+      }
     ];
 
     res.json(mockData);
