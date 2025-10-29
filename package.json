@@ -12,6 +12,7 @@
     "express": "^4.18.2",
     "axios": "^1.6.2",
     "aws4": "^1.12.0",
-    "dotenv": "^16.0.0"
+    "dotenv": "*",
+    "amazon-paapi": "*"
   }
 }
