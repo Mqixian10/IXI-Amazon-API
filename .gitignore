@@ -1,3 +1,26 @@
-node_modules
+# Ignorar node_modules (carpeta con dependencias)
+node_modules/
+
+# Ignorar archivo de entorno con claves privadas
 .env
 
+# Ignorar logs y errores locales
+npm-debug.log
+yarn-error.log
+*.log
+
+# Ignorar archivos del sistema (Windows / macOS)
+.DS_Store
+Thumbs.db
+
+# Ignorar archivos de compilación temporales
+dist/
+build/
+
+# Ignorar backups o archivos temporales
+*.bak
+*.tmp
+
+# Ignorar configuraciones locales de editores
+.vscode/
+.idea/
