@@ -1,0 +1,13 @@
+{
+  "name": "IXI-Amazon-API",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.2",
+    "aws4": "^1.12.0"
+  }
+}
