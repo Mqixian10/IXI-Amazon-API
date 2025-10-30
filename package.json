@@ -3,13 +3,19 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    // Comando para arrancar el servidor con node
     "start": "node server.js",
-    "postinstall": "npx puppeteer browsers install chrome"
+    // Postinstall ejecuta puppeteer para instalar Chromium automáticamente en Render
+    "postinstall": "npx puppeteer install"
   },
   "dependencies": {
+    // Chromium ligero para entornos sin GUI
     "@sparticuz/chromium-min": "^123.0.0",
+    // Herramienta para parsear HTML y extraer datos (similar a jQuery)
     "cheerio": "^1.0.0",
+    // Framework minimalista para servidor HTTP
     "express": "^4.19.0",
+    // Puppeteer sin Chromium, solo para controlar el navegador 
     "puppeteer-core": "^23.0.0"
   }
 }
