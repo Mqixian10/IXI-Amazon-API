@@ -18,7 +18,7 @@ app.get("/", (req, res) => {
 // 👇 Endpoint principal: obtiene productos de Amazon (necesita tus credenciales)
 app.get("/api/creatinas", async (req, res) => {
   try {
-    const ACCESS_KEY = process.env.AMAZON_ACCESS_KEY;
+    const ACCESS_KEY = process.env.AMAZON_ACCESS_K EY;
     const SECRET_KEY = process.env.AMAZON_SECRET_KEY;
     const PARTNER_TAG = "ufc0d-21"; // tu storeID
     const REGION = "eu-west-1"; // Europa
