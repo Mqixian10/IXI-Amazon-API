@@ -1,6 +1,6 @@
 import express from "express";
 import puppeteer from "puppeteer";
-import cheerio from "cheerio";
+import * as cheerio from "cheerio";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
