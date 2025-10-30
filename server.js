@@ -1,96 +1,83 @@
 // Importamos express para crear el servidor HTTP
 import express from 'express';
 
-// Importamos cheerio para parsear HTML (usamos import * as por compatibilidad con ESModules)
+// Importamos cheerio para parsear HTML
 import * as cheerio from 'cheerio';
 
+// Usamos puppeteer-core junto con @sparticuz/chromium para entornos cloud
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
 // Creamos la app de express
 const app = express();
 
-// Definimos el puerto que usaremos, lo tomamos de la variable de entorno PORT que usa Render, o 3000 por defecto
+// Definimos el puerto (Render expone PORT)
 const PORT = process.env.PORT || 3000;
 
 /**
- * Ruta raíz '/' para que al acceder sin parámetros se muestre un mensaje amigable
- * Así no sale error 404 cuando visitas https://tu-api/
+ * Ruta raíz
  */
 app.get('/', (req, res) => {
   res.send('API de scraping de productos Amazon activo. Usa /apisearch?q=tu_busqueda para obtener productos.');
 });
 
 /**
- * Ruta /apisearch que recibe el parámetro de consulta 'q' con el término a buscar en Amazon
- * Por ejemplo: /apisearch?q=proteina
+ * Ruta /apisearch que recibe el parámetro 'q'
+ * Ejemplo: /apisearch?q=proteina
  */
 app.get('/apisearch', async (req, res) => {
-  // Obtenemos el término de búsqueda de los query params
+  // Obtenemos el término de búsqueda
   const query = req.query.q;
 
-  // Si no envían parámetro 'q', respondemos con error 400 (Bad Request)
+  // Validación de parámetro requerido
   if (!query) {
-    return res.status(400).json({ error: "Falta el parámetro q de búsqueda" });
+    return res.status(400).json({ error: 'Falta el parámetro q de búsqueda' });
   }
 
   try {
-    // Usamos puppeteer para lanzar Chromium con configuración optimizada para servidores sin GUI (headless)
+    // Lanzamos Chromium con configuración optimizada para servidores
     const browser = await puppeteer.launch({
       args: chromium.args,
-  executablePath: await chromium.executablePath(),
-  headless: chromium.headless,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless
     });
 
-    // Abrimos una nueva pestaña en el navegador
     const page = await browser.newPage();
+    page.setDefaultNavigationTimeout(45000);
 
-    // Construimos la URL de búsqueda en Amazon.es codificando el término para que sea URL-safe
+    // Construimos la URL de búsqueda
     const searchUrl = `https://www.amazon.es/s?k=${encodeURIComponent(query)}`;
 
-    // Navegamos a la URL y esperamos que se cargue el DOM para luego extraer HTML
+    // Cargamos la página y esperamos el DOM
     await page.goto(searchUrl, { waitUntil: 'domcontentloaded' });
 
-    // Obtenemos el contenido HTML completo de la página
+    // Obtenemos el HTML y lo cargamos en Cheerio
     const html = await page.content();
-
-    // Cargamos el HTML en Cheerio para manipularlo y extraer datos usando selectores CSS similares a jQuery
     const $ = cheerio.load(html);
 
-    // Array donde iremos guardando cada producto encontrado
+    // Extraemos productos
     const productos = [];
-
-    // Seleccionamos todos los elementos que tengan clase 's-result-item' (indicativo de producto)
     $('.s-result-item').each((i, el) => {
-      // Extraemos el título del producto (texto dentro del selector correcto)
       const titulo = $(el).find('h2 a span').text().trim();
-
-      // Extraemos la URL de la imagen del producto
       const imagen = $(el).find('img.s-image').attr('src');
+      const href = $(el).find('h2 a').attr('href');
+      const link = href ? `https://www.amazon.es${href}` : null;
+      const precio = $(el).find('.a-price-whole').text().trim() || 'Precio no disponible';
 
-      // Extraemos el precio, si no existe ponemos texto alternativo
-      const precio = $(el).find('.a-price-whole').text().trim() || "Precio no disponible";
-
-      // Extraemos el enlace completo al producto en Amazon concatenando dominio y ruta (href)
-      const link = `https://www.amazon.es${$(el).find('h2 a').attr('href')}`;
-
-      // Solo añadimos si tenemos los datos principales (esto evita productos vacíos)
       if (titulo && imagen && link) {
         productos.push({ titulo, imagen, precio, link });
       }
     });
 
-    // Cerramos el navegador para liberar recursos
     await browser.close();
 
-    // Respondemos con máximo 10 productos para no saturar el cliente
-    res.json(productos.slice(0, 10));
+    // Respondemos con máximo 10 resultados
+    return res.json(productos.slice(0, 10));
   } catch (error) {
-    // Si ocurre cualquier error, mostramos el error en consola para debug y respondemos con error 500
     console.error('❌ Error al obtener productos:', error);
-    res.status(500).json({ error: 'Error al scrapear Amazon' });
+    return res.status(500).json({ error: 'Error al scrapear Amazon' });
   }
 });
 
-// Levantamos el servidor escuchando en el puerto asignado y mostramos mensaje en consola
+// Levantamos el servidor
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
