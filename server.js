@@ -1,5 +1,5 @@
 import express from 'express';
-import cheerio from 'cheerio';
+import * as cheerio from 'cheerio'; // Corrección en importación
 import chromium from '@sparticuz/chromium-min';
 import puppeteer from 'puppeteer-core';
 
@@ -14,7 +14,6 @@ app.get('/apisearch', async (req, res) => {
   }
 
   try {
-    // Lanzamos browser con ejecución controlada para Render
     const browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
@@ -27,9 +26,9 @@ app.get('/apisearch', async (req, res) => {
     const searchUrl = `https://www.amazon.es/s?k=${encodeURIComponent(query)}`;
 
     await page.goto(searchUrl, { waitUntil: 'domcontentloaded' });
-
     const html = await page.content();
     const $ = cheerio.load(html);
+
     const productos = [];
 
     $('.s-result-item').each((i, el) => {
@@ -44,7 +43,7 @@ app.get('/apisearch', async (req, res) => {
     });
 
     await browser.close();
-    res.json(productos.slice(0, 10));
+    res.json(productos.slice(0,10));
   } catch (error) {
     console.error('❌ Error al obtener productos:', error);
     res.status(500).json({ error: 'Error al scrapear Amazon' });
