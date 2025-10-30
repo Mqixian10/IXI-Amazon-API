@@ -1,6 +1,7 @@
 // Importamos express para crear el servidor HTTP
 import express from 'express';
-
+const html = await page.content();
+console.log(html.slice(0, 5000)); // Muestra los primeros 5000 caracteres
 // Importamos cheerio para parsear HTML
 import * as cheerio from 'cheerio';
 
@@ -36,11 +37,20 @@ app.get('/apisearch', async (req, res) => {
 
   try {
     // Lanzamos Chromium con configuración optimizada para servidores
-    const browser = await puppeteer.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath(),
-      headless: chromium.headless
-    });
+   const browser = await puppeteer.launch({
+  args: [
+    ...chromium.args,
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--disable-dev-shm-usage',
+    '--disable-gpu',
+    '--no-zygote',
+    '--single-process'
+  ],
+  defaultViewport: chromium.defaultViewport,
+  executablePath: await chromium.executablePath(),
+  headless: true,
+  });
 
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(45000);
@@ -48,9 +58,14 @@ app.get('/apisearch', async (req, res) => {
     // Construimos la URL de búsqueda
     const searchUrl = `https://www.amazon.es/s?k=${encodeURIComponent(query)}`;
 
+    await page.setUserAgent(
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  );
+
     // Cargamos la página y esperamos el DOM
     await page.goto(searchUrl, { waitUntil: 'domcontentloaded' });
-
+    await page.waitForSelector('.s-result-item h2 a span', { timeout: 10000 });
     // Obtenemos el HTML y lo cargamos en Cheerio
     const html = await page.content();
     const $ = cheerio.load(html);
