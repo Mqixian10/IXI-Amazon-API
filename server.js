@@ -8,7 +8,7 @@ import * as cheerio from 'cheerio';
 import chromium from '@sparticuz/chromium-min';
 
 // Importamos puppeteer-core para controlar el navegador Chromium
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 
 // Creamos la app de express
 const app = express();
@@ -40,11 +40,9 @@ app.get('/apisearch', async (req, res) => {
   try {
     // Usamos puppeteer para lanzar Chromium con configuración optimizada para servidores sin GUI (headless)
     const browser = await puppeteer.launch({
-      args: chromium.args, // Argumentos específicos para correr en entornos serverless como Render
-      defaultViewport: chromium.defaultViewport, // Resolución estándar para evitar errores visuales
-      executablePath: await chromium.executablePath(), // Ruta al ejecutable Chromium, Puppeteer-Core no lo instala
-      headless: chromium.headless, // Modo sin GUI
-      ignoreHTTPSErrors: true, // Ignoramos errores HTTPS para evitar fallos con certificados no válidos
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      ignoreHTTPSErrors: true,
     });
 
     // Abrimos una nueva pestaña en el navegador
