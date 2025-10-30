@@ -1,36 +1,25 @@
-// Importamos express para crear el servidor HTTP
+// Importamos dependencias principales
 import express from 'express';
-const html = await page.content();
-console.log(html.slice(0, 5000)); // Muestra los primeros 5000 caracteres
-// Importamos cheerio para parsear HTML
 import * as cheerio from 'cheerio';
-
-// Usamos puppeteer-core junto con @sparticuz/chromium para entornos cloud
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 
-// Creamos la app de express
+// Inicializamos la app de Express
 const app = express();
-
-// Definimos el puerto (Render expone PORT)
 const PORT = process.env.PORT || 3000;
 
-/**
- * Ruta raíz
- */
+// Ruta raíz
 app.get('/', (req, res) => {
-  res.send('API de scraping de productos Amazon activo. Usa /apisearch?q=tu_busqueda para obtener productos.');
+  res.send('✅ API de scraping de Amazon activa. Usa /apisearch?q=tu_busqueda');
 });
 
-/**
- * Ruta /apisearch que recibe el parámetro 'q'
- * Ejemplo: /apisearch?q=proteina
- */
+// Ruta principal: /apisearch?q=palabra
 app.get('/apisearch', async (req, res) => {
   const query = req.query.q;
   if (!query) return res.status(400).json({ error: 'Falta el parámetro q de búsqueda' });
 
   try {
+    // Lanzamos Chromium optimizado para Render
     const browser = await puppeteer.launch({
       args: [
         ...chromium.args,
@@ -39,7 +28,7 @@ app.get('/apisearch', async (req, res) => {
         '--disable-dev-shm-usage',
         '--disable-gpu',
         '--no-zygote',
-        '--single-process'
+        '--single-process',
       ],
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
@@ -49,19 +38,22 @@ app.get('/apisearch', async (req, res) => {
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(45000);
 
+    // User-Agent realista
     await page.setUserAgent(
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
       "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     );
 
+    // Ir a Amazon y esperar
     const searchUrl = `https://www.amazon.es/s?k=${encodeURIComponent(query)}`;
     await page.goto(searchUrl, { waitUntil: 'networkidle2' });
     await page.waitForSelector('.s-result-item h2 a span', { timeout: 10000 });
 
-    const html = await page.content(); // 👈 aquí dentro
+    // Parsear contenido
+    const html = await page.content();
     const $ = cheerio.load(html);
-
     const productos = [];
+
     $('.s-result-item').each((i, el) => {
       const titulo = $(el).find('h2 a span').text().trim();
       const imagen = $(el).find('img.s-image').attr('src');
@@ -75,6 +67,7 @@ app.get('/apisearch', async (req, res) => {
     });
 
     await browser.close();
+
     return res.json(productos.slice(0, 10));
   } catch (error) {
     console.error('❌ Error al obtener productos:', error);
@@ -82,5 +75,5 @@ app.get('/apisearch', async (req, res) => {
   }
 });
 
-// Levantamos el servidor
-app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+// Levantar servidor
+app.listen(PORT, () => console.log(`🚀 Servidor corriendo en puerto ${PORT}`));
