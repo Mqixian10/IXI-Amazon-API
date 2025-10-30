@@ -27,50 +27,40 @@ app.get('/', (req, res) => {
  * Ejemplo: /apisearch?q=proteina
  */
 app.get('/apisearch', async (req, res) => {
-  // Obtenemos el término de búsqueda
   const query = req.query.q;
-
-  // Validación de parámetro requerido
-  if (!query) {
-    return res.status(400).json({ error: 'Falta el parámetro q de búsqueda' });
-  }
+  if (!query) return res.status(400).json({ error: 'Falta el parámetro q de búsqueda' });
 
   try {
-    // Lanzamos Chromium con configuración optimizada para servidores
-   const browser = await puppeteer.launch({
-  args: [
-    ...chromium.args,
-    '--no-sandbox',
-    '--disable-setuid-sandbox',
-    '--disable-dev-shm-usage',
-    '--disable-gpu',
-    '--no-zygote',
-    '--single-process'
-  ],
-  defaultViewport: chromium.defaultViewport,
-  executablePath: await chromium.executablePath(),
-  headless: true,
-  });
+    const browser = await puppeteer.launch({
+      args: [
+        ...chromium.args,
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--no-zygote',
+        '--single-process'
+      ],
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: true,
+    });
 
     const page = await browser.newPage();
     page.setDefaultNavigationTimeout(45000);
 
-    // Construimos la URL de búsqueda
-    const searchUrl = `https://www.amazon.es/s?k=${encodeURIComponent(query)}`;
-
     await page.setUserAgent(
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-  "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-  );
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+      "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    );
 
-    // Cargamos la página y esperamos el DOM
-    await page.goto(searchUrl, { waitUntil: 'domcontentloaded' });
+    const searchUrl = `https://www.amazon.es/s?k=${encodeURIComponent(query)}`;
+    await page.goto(searchUrl, { waitUntil: 'networkidle2' });
     await page.waitForSelector('.s-result-item h2 a span', { timeout: 10000 });
-    // Obtenemos el HTML y lo cargamos en Cheerio
-    const html = await page.content();
+
+    const html = await page.content(); // 👈 aquí dentro
     const $ = cheerio.load(html);
 
-    // Extraemos productos
     const productos = [];
     $('.s-result-item').each((i, el) => {
       const titulo = $(el).find('h2 a span').text().trim();
@@ -85,8 +75,6 @@ app.get('/apisearch', async (req, res) => {
     });
 
     await browser.close();
-
-    // Respondemos con máximo 10 resultados
     return res.json(productos.slice(0, 10));
   } catch (error) {
     console.error('❌ Error al obtener productos:', error);
