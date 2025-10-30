@@ -8,8 +8,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.get('/', (req, res) => res.send('API funcionando correctamente ✅'));
+
 // === ENDPOINT PARA OBTENER LAS 10 MEJORES CREATINAS ===
-// Este endpoint usará la API de Amazon para traer los productos
 app.get('/api/creatinas', async (req, res) => {
   try {
     const commonParameters = {
@@ -17,7 +17,8 @@ app.get('/api/creatinas', async (req, res) => {
       SecretKey: process.env.AMAZON_SECRET_KEY,
       PartnerTag: process.env.AMAZON_PARTNER_TAG,
       PartnerType: 'Associates',
-      Marketplace: 'www.amazon.es'
+      Marketplace: 'www.amazon.es',
+      Region: process.env.AMAZON_REGION
     };
 
     const requestParameters = {
@@ -50,8 +51,6 @@ app.get('/api/creatinas', async (req, res) => {
     res.status(500).json({ error: 'Error al obtener los productos de Amazon' });
   }
 });
-
-
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
